@@ -57,7 +57,7 @@ exports.isStudent=async (req,res,next)=>{
         console.log("Error in autorization",error);
         res.status(403).json({
             success:false,
-            message:"Could not authorize user'role"
+            message:"Could not authorize user's role"
         })
     }
 }
@@ -80,7 +80,30 @@ exports.isInstructor=async (req,res,next)=>{
         console.log("Error in autorization",error);
         res.status(403).json({
             success:false,
-            message:"Could not authorize user'role"
+            message:"Could not authorize user's role"
+        })
+    }
+}
+exports.isAdmin=async (req,res,next)=>{
+    try {
+        const {accountType}=req.body.userData;
+        if(accountType!=="Admin"){
+            return res.status(401).json({
+                success:false,
+                message:"Unauthorized access : This is protected route for instructor"
+            })
+        }
+
+        res.status(200).json({
+            success:true,
+            message:"Autorized access"
+        });
+        next();
+    } catch (error) {
+        console.log("Error in autorization",error);
+        res.status(403).json({
+            success:false,
+            message:"Could not authorize user's role"
         })
     }
 }

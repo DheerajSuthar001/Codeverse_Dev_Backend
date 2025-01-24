@@ -11,10 +11,9 @@ const Tag=new mongoose.Schema({
         required:true
         
     },
-    course:{
+    courses:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Course",
-        required:true
-    }  
+    }]  
 })
 module.exports=mongoose.model("Tag",Tag);  

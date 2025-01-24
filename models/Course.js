@@ -24,7 +24,6 @@ const Course=new mongoose.Schema({
     courseContent:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Section",
-        required:true
     }],
     ratingAndReview:[{
         type:mongoose.Schema.Types.ObjectId,
@@ -40,7 +39,8 @@ const Course=new mongoose.Schema({
     },
     tag:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"Tag"
+        ref:"Tag",
+        required:true
     },
     studentEnrolled:[{
         type:mongoose.Schema.Types.ObjectId,
