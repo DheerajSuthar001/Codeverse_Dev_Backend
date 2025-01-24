@@ -67,7 +67,7 @@ exports.isInstructor=async (req,res,next)=>{
         if(accountType!=="Instructor"){
             return res.status(401).json({
                 success:false,
-                message:"Unauthorized access : : This is protected route for instructor"
+                message:"Unauthorized access : This is protected route for instructor"
             })
         }
 

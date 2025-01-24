@@ -83,7 +83,7 @@ exports.signUp = async (req, res) => {
         if (!checkUserPresent) {
             return res.status(400).json({
                 success: false,
-                message: "User already registered";
+                message: "User already registered"
             })
         }
         const latestOtp = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
@@ -218,13 +218,14 @@ exports.changePassword=async (req,res)=>{
             message:"Old password does not match!"
         })
     }
-
+    //hashing the password
+    const hashedNewPassword=bcrypt.hash(newPassword,10);
     //db entry
 
-    const updatedPassword= await User.findOneAndUpdate({email},{password:newPassword},{new:true});
+    const updatedPassword= await User.findOneAndUpdate({email},{password:hashedNewPassword},{new:true});
     //send email
 
-    const info=mailSender(email,"PassWord updated successfully", "Password Updated");
+    const info= await mailSender(email,"PassWord updated successfully", "Password Updated");
 
     //send response
     res.status(200).json({
