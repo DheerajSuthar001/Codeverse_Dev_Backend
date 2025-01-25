@@ -1,6 +1,6 @@
 const mongoose=require('mongoose');
 
-const Tag=new mongoose.Schema({
+const Category=new mongoose.Schema({
    
     name:{
         type:String,
@@ -16,4 +16,4 @@ const Tag=new mongoose.Schema({
         ref:"Course",
     }]  
 })
-module.exports=mongoose.model("Tag",Tag);  
+module.exports=mongoose.model("Category",Category);  

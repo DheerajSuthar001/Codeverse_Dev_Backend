@@ -1,15 +1,15 @@
 const Course = require('../models/Course');
-const Tag = require('../models/Tag');
+const Category = require('../models/Category');
 const User = require('../models/User');
 const { imageUploader } = require('../utils/imageUploader');
 
 exports.createCourse = async (req, res) => {
     try {
-        const { courseName, courseDescription, price, tag, whatYouWillLearn } = req.body;
+        const { courseName, courseDescription, price, category,tags, whatYouWillLearn } = req.body;
         const thumbnail = req.files.thumbnailImage;
 
         //validations
-        if (!courseName || !courseDescription || !price || !tag || !whatYouWillLearn || !thumbnail) {
+        if (!courseName || !courseDescription || !price || !category || !whatYouWillLearn || !thumbnail ||!tags) {
             res.status(403).json({
                 success: false,
                 message: "All fields are required"
@@ -24,11 +24,11 @@ exports.createCourse = async (req, res) => {
         //         status: false,
         //         message: "Instructor not found"
         //     })
-        const checkTagExists = await Tag.findById(tag);
-        if (!checkTagExists) {
+        const checkCategoryExists = await Category.findById(category);
+        if (!checkCategoryExists) {
             return res.status(404).json({
                 success: false,
-                message: "Invalid tag"
+                message: "Invalid Category"
             })
         }
         //Upload image
@@ -40,8 +40,9 @@ exports.createCourse = async (req, res) => {
             instructor: id,
             whatYouWillLearn,
             price,
+            tags,
             thumbnail: thumbnailInfo.secure_url,
-            tag: checkTagExists._id
+            Category: checkCategoryExists._id
         })
         //adding course to the instructor's courses
         await User.findByIdAndUpdate(
@@ -50,9 +51,9 @@ exports.createCourse = async (req, res) => {
                 courses:newCourse._id
             }},
         )
-        //adding new course to tags
-        await Tag.findByIdAndUpdate(
-            checkTagExists._id,
+        //adding new course to Category
+        await Category.findByIdAndUpdate(
+            checkCategoryExists._id,
             {
                 $push:{
                     courses:newCourse._id
@@ -74,7 +75,7 @@ exports.createCourse = async (req, res) => {
 };
 exports.getAllCourses=async (req,res)=>{
     try {
-        const allCourses=await Course.find({},{courseName:true,price:true,thumbnail:true,instructor:true,ratingAndReview:true,studentEnrolled:true}).populate().exec();
+        const allCourses=await Course.find({},{courseName:true,price:true,thumbnail:true,instructor:true,ratingAndReview:true,studentEnrolled:true,tags:true}).populate().exec();
 
         return res.status(200).json({
             success:true,
