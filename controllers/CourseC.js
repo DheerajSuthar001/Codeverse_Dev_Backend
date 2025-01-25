@@ -1,7 +1,7 @@
 const Course = require('../models/Course');
 const Category = require('../models/Category');
 const User = require('../models/User');
-const { imageUploader } = require('../utils/imageUploader');
+const { uploadAsset } = require('../utils/AssetUploader');
 
 exports.createCourse = async (req, res) => {
     try {
@@ -32,7 +32,7 @@ exports.createCourse = async (req, res) => {
             })
         }
         //Upload image
-        const thumbnailInfo = await imageUploader(File, process.env.FOLDER_NAME);
+        const thumbnailInfo = await uploadAsset(File, process.env.FOLDER_NAME);
         //create a course in db
         const newCourse = await Course.create({
             courseName,
