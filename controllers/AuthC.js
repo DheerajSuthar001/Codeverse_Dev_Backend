@@ -6,7 +6,7 @@ const Profile = require('../models/Profile');
 const jwt=require('jsonwebtoken');
 const mailSender=require('../utils/mailSender');
 require('dotenv').config();
-exporrts.sendOtp = async (req, res) => {
+exports.sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

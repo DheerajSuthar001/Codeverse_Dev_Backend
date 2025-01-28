@@ -1,10 +1,14 @@
 const mongoose=require('mongoose');
 
 const RatingAndReview=new mongoose.Schema({
+    course:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Course"
+    },
     user:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
-        required:true
+        required:true 
     },
     rating:{
         type:Number,

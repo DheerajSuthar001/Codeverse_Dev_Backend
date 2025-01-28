@@ -43,6 +43,14 @@ exports.updateSubSection=async (req,res)=>{
     try {
         const {title,description,timeDuration, subSectionId,oldVideoPublicId}=req.body;
         const file=req.files.videoFile;
+
+        if(!title||!description||!timeDuration||!subSectionId ||!file ||!oldVideoPublicId){
+            return res.status(403).json({
+                success:false,
+                message:"All fields are required"
+            })
+        }
+
         const AssetDeleted=await deleteAsset(oldVideoPublicId);
         const videoDetails=await uploadAsset(file,process.env.FOLDER_NAME);
         const updatedSubSection=await SubSection.findByIdAndUpdate(subSectionId,{
@@ -67,6 +75,13 @@ exports.updateSubSection=async (req,res)=>{
 exports.deleteSubSection=async (req,res)=>{
     try {
         const {subSectionId,oldVideoPublicId,sectionId}=req.body;
+        if(!subSectionId ||!sectionId ||!oldVideoPublicId){
+            return res.status(403).json({
+                success:false,
+                message:"All fields are required"
+            })
+        }
+
         await deleteAsset(oldVideoPublicId);
         await SubSection.findByIdAndDelete(subSectionId);
         await Section.findByIdAndUpdate(sectionId,{$pull:{subSections:subSectionId}})

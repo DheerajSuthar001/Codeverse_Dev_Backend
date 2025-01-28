@@ -5,11 +5,11 @@ const { uploadAsset } = require('../utils/AssetUploader');
 
 exports.createCourse = async (req, res) => {
     try {
-        const { courseName, courseDescription, price, category,tags, whatYouWillLearn } = req.body;
+        const { courseName, courseDescription, price, category, tags, whatYouWillLearn } = req.body;
         const thumbnail = req.files.thumbnailImage;
 
         //validations
-        if (!courseName || !courseDescription || !price || !category || !whatYouWillLearn || !thumbnail ||!tags) {
+        if (!courseName || !courseDescription || !price || !category || !whatYouWillLearn || !thumbnail || !tags) {
             res.status(403).json({
                 success: false,
                 message: "All fields are required"
@@ -47,47 +47,91 @@ exports.createCourse = async (req, res) => {
         //adding course to the instructor's courses
         await User.findByIdAndUpdate(
             id,
-            {$push:{
-                courses:newCourse._id
-            }},
+            {
+                $push: {
+                    courses: newCourse._id
+                }
+            },
         )
         //adding new course to Category
         await Category.findByIdAndUpdate(
             checkCategoryExists._id,
             {
-                $push:{
-                    courses:newCourse._id
+                $push: {
+                    courses: newCourse._id
                 }
             }
         )
         return res.status(200).json({
-            success:true,
-            message:"Course created successfully",
-            data:newCourse
+            success: true,
+            message: "Course created successfully",
+            data: newCourse
         })
     } catch (error) {
-        console.log("Error while creating course",error);
+        console.log("Error while creating course", error);
         return res.status(500).json({
-            success:false,
-            message:"Something went wrong while creating course"
+            success: false,
+            message: "Something went wrong while creating course"
         })
     }
 };
-exports.getAllCourses=async (req,res)=>{
+exports.getAllCourses = async (req, res) => {
     try {
-        const allCourses=await Course.find({},{courseName:true,price:true,thumbnail:true,instructor:true,ratingAndReview:true,studentEnrolled:true,tags:true}).populate().exec();
+        const allCourses = await Course.find({}, { courseName: true, price: true, thumbnail: true, instructor: true, ratingAndReview: true, studentEnrolled: true, tags: true }).populate().exec();
 
         return res.status(200).json({
-            success:true,
-            message:"Fetched all courses successfully",
-            courses:allCourses
+            success: true,
+            message: "Fetched all courses successfully",
+            courses: allCourses
         })
 
     } catch (error) {
-        console.log("Error while fetching all courses",error);
+        console.log("Error while fetching all courses", error);
         return res.status(500).json({
-            success:false,
-            message:"Something went wrong while getting all courses data"
+            success: false,
+            message: "Something went wrong while getting all courses data"
+        })
+    }
+};
+
+exports.getCourseDetails = async (req, res) => {
+    try {
+        const { courseId } = req.body;
+
+        const courseDetails = await Course.findById(courseId)
+            .populate({
+                path:"instructor",
+                populate:{
+                    path:"additionalDetails"
+                }
+            })
+            .populate({
+                path:"courseContent",
+                populate:{
+                    path:"subSections"
+                }
+            })
+            .populate("ratingAndReview")
+            .populate("category")
+            .exec();
+
+        if (!courseDetails)
+            return res.status(404).json({
+                success: false,
+                message: `Could not find the course with id- ${courseId}`
+            })
+
+        return res.status(200).json({
+            success: true,
+            message: "Course details fetched successfully",
+            courseDetails
+        });
+
+    } catch (error) {
+        console.log("Error while fetching course", error);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while getting course data"
         })
     }
 }
