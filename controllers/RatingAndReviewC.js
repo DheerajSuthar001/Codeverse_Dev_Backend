@@ -104,7 +104,15 @@ exports.getAllRatings=async (req,res)=>{
                 success: false,
                 message: "All properties are required"
             })
-        const allRatings=await RatingAndReview.find({course:courseId});
+        const allRatings=await RatingAndReview.find({course:courseId}).sort({rating:"desc"})
+        .populate({
+            path:"user",
+            select: "firstName lastName email image"
+        })
+        .populate({
+            path:"course",
+            select:"courseName"
+        }).exec();
         if(!allRatings){
             return res.status(404).json({
                 success:false,
@@ -122,4 +130,4 @@ exports.getAllRatings=async (req,res)=>{
             message: "Something went wrong while getting all ratings"
         })
     }
-}
+};

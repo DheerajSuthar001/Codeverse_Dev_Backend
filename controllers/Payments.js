@@ -5,6 +5,7 @@ const mailSender = require('../utils/mailSender');
 const { courseEnrollmentEmail } = require('../mail/templates/courseEnrollmentEmail');
 const mongoose = require('mongoose');
 const crypto = require('crypto')
+const courseEnrollmentEmail=require('../mail/templates/courseEnrollmentEmail');
 //Capture the payment
 exports.capturePayment = async (req, res) => {
 
@@ -111,8 +112,12 @@ exports.verifySignature = async (req, res) => {
                     message: "User not found"
                 })
             };
-
-            const sentMail = await mailSender(updatedUserData.email, "Congratulation, you are onboarded into new course", courseEnrollmentEmail);
+            const courseName=await Course.findById(courseId,{courseName})
+            const userName=await User.findById(userId,{firstName})
+            const sentMail = await mailSender(
+                updatedUserData.email, 
+                "Congratulation from StudyNotion, you are onboarded into new course",
+                courseEnrollmentEmail(courseName,userName));
 
             return res.status(200).json({
                 success: true,

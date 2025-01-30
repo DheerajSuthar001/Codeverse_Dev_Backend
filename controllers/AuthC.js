@@ -6,6 +6,7 @@ const Profile = require('../models/Profile');
 const jwt=require('jsonwebtoken');
 const mailSender=require('../utils/mailSender');
 require('dotenv').config();
+const passwordUpdated=require('../mail/templates/passowrdUpdated')
 exports.sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
@@ -161,7 +162,7 @@ exports.login = async (req, res) => {
             accountType:checkUserPresent.accountType
         }
         if(await bcrypt.compare(password,userData.password)){
-            const token=jwt.sign(payLoad,process.env.JWT_SECRET,{expiresIn:"2h"})
+            const token=jwt.sign(payLoad,process.env.JWT_SECRET,{expiresIn:"24h"})
             userData.token=token.toObject();
             userData.password=undefined;
             res.cookie("token",token,{
@@ -171,6 +172,12 @@ exports.login = async (req, res) => {
                 success:true,
                 token,
                 message:"Logged in successfully"
+            })
+        }
+        else{
+            res.status(401).json({
+                success:false,
+                message:"Password is incorrect"
             })
         }
 
@@ -212,7 +219,8 @@ exports.changePassword=async (req,res)=>{
                 message:"User not found"
             })
         };
-    if(oldPassword!==userData.password){
+    
+    if(!await bcrypt.compare(oldPassword,userData.password)){
         return res.status(403).json({
             sucess:false,
             message:"Old password does not match!"
@@ -225,18 +233,21 @@ exports.changePassword=async (req,res)=>{
     const updatedPassword= await User.findOneAndUpdate({email},{password:hashedNewPassword},{new:true});
     //send email
 
-    const info= await mailSender(email,"PassWord updated successfully", "Password Updated");
+    const info= await mailSender(
+        email,
+        `PassWord updated successfully got ${userData.firstName} ${userData.lastName}`, 
+        passwordUpdated(email,userData.firstName));
 
     //send response
     res.status(200).json({
         success:true,
-        message:"Password Updated successfully"
+        message:"Password changed successfully"
     })
     } catch (error) {
-        console.log(error);
+        console.log("Error while changing password",error);
         return res.status(500).json({
             success:false,
-            message:"Unable to change password"
+            message:"Something went wrong while changing password"
         })
     }
 }
