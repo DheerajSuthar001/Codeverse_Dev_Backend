@@ -1,10 +1,13 @@
 const mongoose=require('mongoose');
-const mailSender=require('../utils/mailSender')
+const {mailSender}=require('../utils/mailSender');
+const otpTemplate=require('../mail/templates/otpVerification');
 const OTP=new mongoose.Schema({
    
     email:{
         type:String,
-        required:true
+        required:true,
+        lowercase:true,
+        trim:true,
     },
     createdAt:{
         type:Date,
@@ -19,7 +22,7 @@ const OTP=new mongoose.Schema({
 
 async function sendVerificationEmail(email,otp){
     try {
-        const mailResponse=await mailSender(email,"Verification mail for StudyNotion",otp)
+        const mailResponse=await mailSender(email,"Verify Your CodeVerse Account - OTP Inside!",otpTemplate(otp))
         console.log("OTP-mail sent successfully",mailResponse);
         
     } catch (error) {

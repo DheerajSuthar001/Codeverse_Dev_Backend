@@ -10,6 +10,7 @@ const passwordUpdated=require('../mail/templates/passowrdUpdated')
 exports.sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
+        
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.status(403).json({
@@ -18,7 +19,7 @@ exports.sendOtp = async (req, res) => {
             })
         }
         const checkUserPresent = await User.findOne({ email });
-        if (!checkUserPresent) {
+        if (checkUserPresent) {
             return res.status(401).json({
                 success: false,
                 message: "User Already registered"
@@ -31,8 +32,11 @@ exports.sendOtp = async (req, res) => {
             otp = otpGenerator.generate(6, { lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false });
             checkOtpExists = await OTP.findOne({ otp });
         }
-
-        const otpBody = await OTP.create({ email, otp });
+        const otpObject=new OTP({
+            email,
+            otp
+        });
+        const otpBody = await otpObject.save();
 
         res.status(200).json({
             success: true,
@@ -59,7 +63,6 @@ exports.signUp = async (req, res) => {
             accountType,
             otp
         } = req.body;
-
         if (!firstName || !lastName || !email || !password || !confirmPassword || !otp) {
             return res.status(403).json({
                 success: false,
@@ -81,14 +84,14 @@ exports.signUp = async (req, res) => {
         }
 
         const checkUserPresent = await User.findOne({ email });
-        if (!checkUserPresent) {
+        if (checkUserPresent) {
             return res.status(400).json({
                 success: false,
                 message: "User already registered"
             })
         }
-        const latestOtp = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
-
+        const latestOtp = await OTP.find({ email:email }).sort({ createdAt: -1 }).limit(1);
+        console.log(latestOtp);
         if (latestOtp.length == 0) {
             return res.status(400).json(
                 {
@@ -97,10 +100,10 @@ exports.signUp = async (req, res) => {
                 }
             )
         }
-        else if (latestOtp !== otp) {
+        else if (latestOtp[0].otp !== otp) {
             return res.status(400).json({
                 success: false,
-                message: "Otp did not match"
+                message: "Otp is not valid"
             })
         }
 
@@ -153,20 +156,20 @@ exports.login = async (req, res) => {
         if(!userData){
             return res.status(400).json({
                 success:false,
-                message:"User not registered"
+                message:"User is not registered with us. Please sign up"
             })
         };
         const payLoad={
-            id:checkUserPresent._id,
+            id:userData._id,
             email,
-            accountType:checkUserPresent.accountType
+            accountType:userData.accountType
         }
         if(await bcrypt.compare(password,userData.password)){
             const token=jwt.sign(payLoad,process.env.JWT_SECRET,{expiresIn:"24h"})
-            userData.token=token.toObject();
+            userData.token=token;
             userData.password=undefined;
             res.cookie("token",token,{
-                expires:new Date.now() + 3*24*60*60*1000,
+                expires: new Date(Date.now() + 3*24*60*60*1000),
                 httpOnly:true
             }).status(200).json({
                 success:true,
@@ -195,7 +198,6 @@ exports.changePassword=async (req,res)=>{
     try {
         //get all data needed
     const {email,oldPassword,newPassword,confirmNewPassword}=req.body;
-    
     //Other ways to get email either through authorization header or cookie
 
     //data validation

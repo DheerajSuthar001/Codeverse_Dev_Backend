@@ -19,12 +19,12 @@ router.post('/updatesubsection',auth,isInstructor,updateSubSection);
 router.post('/deletesubsection',auth,isInstructor,deleteSubSection);
 
 router.get('/getallcourses',getAllCourses);
-router.post('getcoursedetails',getCourseDetails)
+router.post('/getcoursedetails',getCourseDetails)
 
 //category can only be created by admin
 
 router.post('/createcategory',auth,isAdmin,createCategory);
-router.get('/showallcategory',showAllCategory);
+router.get('/showallcategories',showAllCategory);
 router.get('/getcategorypagedetails',categoryPageDetails);
 
 //Rating and reviews

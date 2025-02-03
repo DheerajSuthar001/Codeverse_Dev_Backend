@@ -5,25 +5,33 @@ const { uploadAsset } = require('../utils/AssetUploader');
 
 exports.createCourse = async (req, res) => {
     try {
-        const { courseName, courseDescription, price, category, tags, whatYouWillLearn } = req.body;
+        const { courseName, courseDescription, price, category, tags, whatYouWillLearn,instructions } = req.body;
+        let {status}=req.body;
         const thumbnail = req.files.thumbnailImage;
 
         //validations
-        if (!courseName || !courseDescription || !price || !category || !whatYouWillLearn || !thumbnail || !tags) {
+        if (!courseName || !courseDescription || !price || !category  || !instructions|| !whatYouWillLearn || !thumbnail || !tags) {
             res.status(403).json({
                 success: false,
                 message: "All fields are required"
             })
         }
+
+        if(!status || status==undefined){
+            status="Draft";
+        }
         //find instructor details
         const id = req.userData.id;
-        // const instructorData = await User.findById(id);
+        const instructorData = await User.findOne({
+            _id:id,
+            accountType:"Instructor"
+        });
 
-        // if (!instructorData)
-        //     return res.status(404).json({
-        //         status: false,
-        //         message: "Instructor not found"
-        //     })
+        if (!instructorData)
+            return res.status(404).json({
+                status: false,
+                message: "Instructor Details not found"
+            })
         const checkCategoryExists = await Category.findById(category);
         if (!checkCategoryExists) {
             return res.status(404).json({
@@ -32,7 +40,7 @@ exports.createCourse = async (req, res) => {
             })
         }
         //Upload image
-        const thumbnailInfo = await uploadAsset(File, process.env.FOLDER_NAME);
+        const thumbnailInfo = await uploadAsset(thumbnail, process.env.FOLDER_NAME);
         //create a course in db
         const newCourse = await Course.create({
             courseName,
@@ -42,7 +50,9 @@ exports.createCourse = async (req, res) => {
             price,
             tags,
             thumbnail: thumbnailInfo.secure_url,
-            Category: checkCategoryExists._id
+            category,
+            status,
+            instructions
         })
         //adding course to the instructor's courses
         await User.findByIdAndUpdate(

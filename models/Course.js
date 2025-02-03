@@ -37,10 +37,10 @@ const Course=new mongoose.Schema({
         type:String,
         required:true
     },
-    tags:{
+    tags:[{
         type:String,
         required:true
-    },
+    }],
     category:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Category",

@@ -4,9 +4,9 @@ const { uploadAsset,deleteAsset } = require('../utils/AssetUploader');
 require('dotenv').config();
 exports.createSubSection=async (req,res)=>{
     try {
-        const {title,description,timeDuration, sectionId}=req.body;
+        const {title,description, sectionId}=req.body;
         const file=req.files.videoFile;
-        if(!title||!description||!timeDuration||!sectionId ||!file){
+        if(!title||!description||!sectionId ||!file){
             return res.status(403).json({
                 success:false,
                 message:"All fields are required"
@@ -17,7 +17,7 @@ exports.createSubSection=async (req,res)=>{
         const newSubSection=await SubSection.create({
             title,
             description,
-            timeDuration,
+            timeDuration:videoDetails.duration,
             videoUrl:videoDetails.secure_url
         });
 

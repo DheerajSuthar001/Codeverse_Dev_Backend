@@ -1,5 +1,5 @@
 const User=require('../models/User')
-const mailSender=require('../utils/mailSender')
+const {mailSender}=require('../utils/mailSender')
 const cryto=require('crypto');
 const bcrypt=require('bcrypt')
 
@@ -69,7 +69,7 @@ exports.resetPassword=async(req,res)=>{
             })
         }
         //create hashed password
-        const hashedPassword=bcrypt.hash(password,10);
+        const hashedPassword=await bcrypt.hash(password,10);
         //update in db
         await User.findOneAndUpdate({token:token},{password:hashedPassword})
         return res.status(200).json({
@@ -80,7 +80,7 @@ exports.resetPassword=async(req,res)=>{
     } catch (error) {
         console.log("Error in reseting password",error);
         return res.status(500).json({
-            success:true,
+            success:false,
             message:"Something went wrong while reseting password"
         })
     }

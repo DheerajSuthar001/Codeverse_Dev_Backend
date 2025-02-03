@@ -4,14 +4,9 @@ const Course = require('../models/Course');
 const { uploadAsset } = require('../utils/AssetUploader');
 exports.updateProfile = async (req, res) => {
     try {
-        const { dateOfBirth = "", about = "", contactNumber, gender } = req.body;
+        const { dateOfBirth = "", about = "", contactNumber, gender="" } = req.body;
         const userId = req.userData.id;
-        if (!contactNumber || !gender || !userId) {
-            return res.status(403).json({
-                success: false,
-                message: "All fields are required"
-            })
-        }
+        
         const Userdetail = await User.findById(userId);
         const profileId = Userdetail.additionalDetails;
         const profileDetails = await Profile.findById(profileId);
@@ -47,7 +42,7 @@ exports.deleteAccount = async (req, res) => {
             })
         }
 
-        const profileId = userDetails.additionalDetails;
+        const profileId = userDetails.additionalDetails._id;
         await Profile.findByIdAndDelete(profileId);
         await Course.updateMany({ studentEnrolled: id }, {
             $pull: {
@@ -96,15 +91,13 @@ exports.updateDisplayPicture = async (req, res) => {
     try {
         const displayPicture = req.files.displayPicture;
         const id = req.userData.id;
-
         const displayPictureData = await uploadAsset(displayPicture, process.env.FOLDER_NAME, 1000, 1000)
-
         const updatedDisplayPicture = await User.findByIdAndUpdate(
             id,
             { image: displayPictureData.secure_url },
             { new: true }
         )
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Image updated successfully"
         })
