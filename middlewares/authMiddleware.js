@@ -4,7 +4,7 @@ const User=require('../models/User');
 exports.auth= async(req,res,next)=>{
     try {
         //GEtting the token either through cookies or authorisation bearrer header
-        const token=req?.header("Authorization")?.replace("Bearer","")|| req.cookies.token;
+        const token=req?.header("Authorization")?.replace("Bearer","").trim()|| req.cookies.token;
         //checking tkoen exists
         if(!token){
             return res.status(401).json({
@@ -17,7 +17,7 @@ exports.auth= async(req,res,next)=>{
         try {
             const decoded= jwt.verify(token, process.env.JWT_SECRET); 
             req.userData=decoded;
-            console.log(decoded);
+            
         } catch (error) {
             console.log(error);
             return res.status(403).json({

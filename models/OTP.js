@@ -23,7 +23,7 @@ const OTP=new mongoose.Schema({
 async function sendVerificationEmail(email,otp){
     try {
         const mailResponse=await mailSender(email,"Verify Your CodeVerse Account - OTP Inside!",otpTemplate(otp))
-        console.log("OTP-mail sent successfully",mailResponse);
+        
         
     } catch (error) {
         console.log("Error while sending otp",error);

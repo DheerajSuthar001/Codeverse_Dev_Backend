@@ -4,9 +4,9 @@ const otpGenerator = require('otp-generator');
 const bcrypt = require('bcrypt');
 const Profile = require('../models/Profile');
 const jwt=require('jsonwebtoken');
-const mailSender=require('../utils/mailSender');
+const {mailSender}=require('../utils/mailSender');
 require('dotenv').config();
-const passwordUpdated=require('../mail/templates/passowrdUpdated')
+const {passwordUpdated}=require('../mail/templates/passowrdUpdated')
 exports.sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
@@ -91,7 +91,8 @@ exports.signUp = async (req, res) => {
             })
         }
         const latestOtp = await OTP.find({ email:email }).sort({ createdAt: -1 }).limit(1);
-        console.log(latestOtp);
+        
+       
         if (latestOtp.length == 0) {
             return res.status(400).json(
                 {
@@ -100,7 +101,7 @@ exports.signUp = async (req, res) => {
                 }
             )
         }
-        else if (latestOtp[0].otp !== otp) {
+        else if (latestOtp[0].otp != otp) {
             return res.status(400).json({
                 success: false,
                 message: "Otp is not valid"
@@ -152,7 +153,7 @@ exports.login = async (req, res) => {
                 message: "Invalid email format"
             })
         }
-        const userData=await User.findOne({email});
+        const userData=await User.findOne({email}).populate('additionalDetails').exec();
         if(!userData){
             return res.status(400).json({
                 success:false,
@@ -174,6 +175,7 @@ exports.login = async (req, res) => {
             }).status(200).json({
                 success:true,
                 token,
+                userData,
                 message:"Logged in successfully"
             })
         }
@@ -196,25 +198,21 @@ exports.login = async (req, res) => {
 }
 exports.changePassword=async (req,res)=>{
     try {
+    
         //get all data needed
-    const {email,oldPassword,newPassword,confirmNewPassword}=req.body;
+        const { oldPassword, newPassword } = req.body;
     //Other ways to get email either through authorization header or cookie
 
     //data validation
-    if(!email || !oldPassword || !newPassword || !confirmNewPassword){
+    if(!oldPassword || !newPassword ){
         return res.status(403).json({
             success:false,
             message:"All fields are required.Please try again"
         })
     }
     
-    if(newPassword!==confirmNewPassword){
-        return res.status(403).json({
-            success:false,
-            message:"New Passwords does not match"
-        })
-    }
-    const userData=await User.findOne({email});
+   
+    const userData=await User.findById({_id:req.userData.id});
         if(!userData){
             return res.status(404).json({
                 success:false,
@@ -229,16 +227,16 @@ exports.changePassword=async (req,res)=>{
         })
     }
     //hashing the password
-    const hashedNewPassword=bcrypt.hash(newPassword,10);
+    const hashedNewPassword=await bcrypt.hash(newPassword,10);
     //db entry
 
-    const updatedPassword= await User.findOneAndUpdate({email},{password:hashedNewPassword},{new:true});
+    const updatedPassword= await User.findByIdAndUpdate({_id:req.userData.id},{password:hashedNewPassword},{new:true});
     //send email
 
     const info= await mailSender(
-        email,
+        userData.email,
         `PassWord updated successfully got ${userData.firstName} ${userData.lastName}`, 
-        passwordUpdated(email,userData.firstName));
+        passwordUpdated(userData.email,userData.firstName));
 
     //send response
     res.status(200).json({

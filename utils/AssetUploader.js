@@ -11,7 +11,7 @@ exports.uploadAsset=async (file,folder,quality,height)=>{
         option.resource_type="auto";
         return await cloudinary.uploader.upload(file.tempFilePath,option)
     } catch (error) {
-        console.log("something went wrong while uploading image")
+        console.log("something went wrong while uploading image",error)
     }
 }
 exports.deleteAsset=async(publicId)=>{

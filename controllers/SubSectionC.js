@@ -5,7 +5,7 @@ require('dotenv').config();
 exports.createSubSection=async (req,res)=>{
     try {
         const {title,description, sectionId}=req.body;
-        const file=req.files.videoFile;
+        const file=req.files.video;
         if(!title||!description||!sectionId ||!file){
             return res.status(403).json({
                 success:false,
@@ -29,7 +29,7 @@ exports.createSubSection=async (req,res)=>{
         res.status(200).json({
             success:true,
             message:"SubSection created successfully",
-            updatedSection
+            data:updatedSection
         })
     } catch (error) {
         console.log("Error in creating subSection",error);
@@ -41,59 +41,79 @@ exports.createSubSection=async (req,res)=>{
 };
 exports.updateSubSection=async (req,res)=>{
     try {
-        const {title,description,timeDuration, subSectionId,oldVideoPublicId}=req.body;
-        const file=req.files.videoFile;
-
-        if(!title||!description||!timeDuration||!subSectionId ||!file ||!oldVideoPublicId){
-            return res.status(403).json({
-                success:false,
-                message:"All fields are required"
-            })
+        const { sectionId,subSectionId, title, description } = req.body
+        const subSection = await SubSection.findById(subSectionId)
+    
+        if (!subSection) {
+          return res.status(404).json({
+            success: false,
+            message: "SubSection not found",
+          })
         }
-
-        const AssetDeleted=await deleteAsset(oldVideoPublicId);
-        const videoDetails=await uploadAsset(file,process.env.FOLDER_NAME);
-        const updatedSubSection=await SubSection.findByIdAndUpdate(subSectionId,{
-            title,
-            description,
-            timeDuration,
-            videoUrl:videoDetails.secure_url
-        });
-        return res.status(200).json({
-            success:true,
-            message:"SubSection updated successfully"
+    
+        if (title !== undefined) {
+          subSection.title = title
+        }
+    
+        if (description !== undefined) {
+          subSection.description = description
+        }
+        if (req.files && req.files.video !== undefined) {
+          const video = req.files.video
+          const uploadDetails = await uploadAsset(
+            video,
+            process.env.FOLDER_NAME
+          )
+          subSection.videoUrl = uploadDetails.secure_url
+          subSection.timeDuration = `${uploadDetails.duration}`
+        }
+    
+        await subSection.save()
+        const updatedSection = await Section.findById(sectionId).populate("subSections")
+        return res.json({
+          success: true,
+          data:updatedSection,
+          message: "Section updated successfully",
         })
-
-    } catch (error) {
-        console.log("Error in updating subSection",error);
-        res.status(500).json({
-            success:false,
-            message:"Something went wrong while updating subSection"
+      } catch (error) {
+        console.error(error)
+        return res.status(500).json({
+          success: false,
+          message: "An error occurred while updating the section",
         })
-    }
+      }
 }
 exports.deleteSubSection=async (req,res)=>{
     try {
-        const {subSectionId,oldVideoPublicId,sectionId}=req.body;
-        if(!subSectionId ||!sectionId ||!oldVideoPublicId){
-            return res.status(403).json({
-                success:false,
-                message:"All fields are required"
-            })
+        const { subSectionId, sectionId } = req.body
+        
+        await Section.findByIdAndUpdate(
+          { _id: sectionId },
+          {
+            $pull: {
+              subSections: subSectionId,
+            },
+          }
+        )
+        const subSection = await SubSection.findByIdAndDelete({ _id: subSectionId })
+    
+        if (!subSection) {
+          return res
+            .status(404)
+            .json({ success: false, message: "SubSection not found" })
         }
+        const updatedSection = await Section.findById(sectionId).populate("subSections").exec();
 
-        await deleteAsset(oldVideoPublicId);
-        await SubSection.findByIdAndDelete(subSectionId);
-        await Section.findByIdAndUpdate(sectionId,{$pull:{subSections:subSectionId}})
-        return res.status(200).json({
-            success:true,
-            message:"SubSection deleted successfully"
+        return res.json({
+          success: true,
+          data:updatedSection,
+          message: "SubSection deleted successfully",
         })
-    } catch (error) {
-        console.log("Error in deleting subSection",error);
-        res.status(500).json({
-            success:false,
-            message:"Something went wrong while deleting subSection"
+      } catch (error) {
+        console.error(error)
+        return res.status(500).json({
+          success: false,
+          message: "An error occurred while deleting the SubSection",
         })
-    }
+      }
 }
